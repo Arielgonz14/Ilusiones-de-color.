@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ilusiones de color</title>
+  <!-- Tailwind CSS desde CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Iconos Lucide -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-teal-100 text-gray-800 font-sans min-h-screen flex flex-col">
+
+  <header class="bg-teal-100 shadow-sm border-b border-gray-300 sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-0 py-2 flex items-center justify-between gap-4">
+      <!-- Logo -->
+      <div class="flex items-center gap-2 order-1 relative -left-12">
+        <img src="imgs/Logo/logo.jpg" alt="Logo" class="w-12 h-12 object-contain">
+        <div>
+          <h1 class="text-xl font-bold text-teal-500 leading-none">Ilusiones de color</h1>
+          <p class="text-xs text-gray-500">Sorprende a esa presona especial</p>
+        </div>
+      </div>
+
+      <!-- Buscador de productos -->
+      <div class="hidden md:flex flex-1 max-w-xs relative order-2 -left-32">
+        <input type="text" id="search-input" onkeyup="filtrarProductos()" placeholder="Buscar un regalo..." 
+               class="w-full pl-9 pr-4 py-2 bg-gray-100 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-rose-400">
+        <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-3 top-2.5"></i>
+      </div>
+
+      <!-- Botón Carrito -->
+      <button onclick="toggleCarrito()" class="relative p-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-full transition-colors order-3">
+        <i data-lucide="shopping-bag" class="w-7 h-7"></i>
+        <span id="cart-badge" class="absolute -top-1 -right-1 bg-rose-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center hidden">0</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- 
+  <div class="bg-rose-500 text-white text-center py-1.5 px-4 text-xs md:text-sm font-medium">
+    ✨ Pedidos directos por WhatsApp • Envíos locales y entregas acordadas ✨
+  </div>
+  -->
+
+
+  <!-- 2. FILTROS DE CATEGORÍAS-->
+  <main class="flex-1 max-w-6xl w-full mx-auto px-4 py-8">
+    <div class="flex items-center justify-start md:justify-center gap-2 overflow-x-auto pb-4 mb-8" id="categories-container">
+      <button onclick="filtrarCategoria('todas')" class="bg-rose-500 text-white px-4 py-2 rounded-full text-sm font-medium shadow-sm">Todos</button>
+      <button onclick="filtrarCategoria('cumpleanos')" class="bg-white hover:bg-rose-50 text-gray-600 px-4 py-2 rounded-full text-sm font-medium shadow-sm">Cumpleaños</button>
+      <button onclick="filtrarCategoria('aniversario')" class="bg-white hover:bg-rose-50 text-gray-600 px-4 py-2 rounded-full text-sm font-medium shadow-sm">Aniversario</button>
+      <button onclick="filtrarCategoria('flores')" class="bg-white hover:bg-rose-50 text-gray-600 px-4 py-2 rounded-full text-sm font-medium shadow-sm">Flores</button>
+      <button onclick="filtrarCategoria('chocolates')" class="bg-white hover:bg-rose-50 text-gray-600 px-4 py-2 rounded-full text-sm font-medium shadow-sm">Chocolates</button>
+    </div>
+
+    <!-- Rejilla donde se cargan los productos -->
+    <div id="products-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
+  </main>
+
+  <!-- 3. PANEL LATERAL DEL CARRITO Y CHECKOUT-->
+  <div id="cart-drawer" class="fixed inset-0 z-50 overflow-hidden hidden">
+    <div onclick="toggleCarrito()" class="fixed inset-0 bg-gray-500 bg-opacity-75"></div>
+    <div class="fixed inset-y-0 right-0 pl-10 max-w-full flex">
+      <div class="w-screen max-w-md bg-white shadow-xl flex flex-col">
+        <div class="p-4 bg-rose-50 border-b border-rose-100 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <i data-lucide="shopping-cart" class="w-5 h-5 text-rose-500"></i>
+            <h2 class="text-lg font-bold text-gray-800">Tu Carrito</h2>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <!-- Botón Vaciar Carrito -->
+            <button onclick="vaciarCarrito()" 
+                    title="Vaciar carrito"
+                    class="text-xs text-rose-600 hover:text-rose-800 font-semibold px-2 py-1 bg-rose-100 hover:bg-rose-200 rounded-lg transition-colors flex items-center gap-1">
+              <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+              Vaciar
+            </button>
+
+            <!-- Botón Cerrar Carrito -->
+            <button onclick="toggleCarrito()" class="p-1 text-gray-400 hover:text-gray-600">
+              <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+          </div>
+        </div>
+        <div id="cart-items" class="flex-1 overflow-y-auto p-4 space-y-4"></div>
+
+        <div id="checkout-section" class="border-t border-gray-200 p-4 bg-gray-50 space-y-3">
+          <div class="space-y-2">
+            <label class="block text-xs font-semibold text-gray-600 uppercase">Datos de Entrega</label>
+            <input type="text" id="cliente-nombre" placeholder="Tu Nombre Completo *" class="w-full px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg">
+            <textarea id="cliente-direccion" rows="2" placeholder="Dirección completa de entrega *" class="w-full px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg"></textarea>
+            <textarea id="cliente-dedicatoria" rows="2" placeholder="💌 Mensaje para la tarjeta (Opcional)" class="w-full px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg"></textarea>
+            
+            <label class="block text-xs font-semibold text-gray-600 uppercase pt-1">Método de Pago</label>
+            <select id="cliente-pago" class="w-full px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg">
+              <option value="Transferencia Bancaria (SPEI)">Transferencia Bancaria</option>
+              <option value="Pago Contra Entrega (Efectivo)">Pago Contra Entrega (Efectivo/tarjeta)</option>
+            </select>
+          </div>
+
+          <div class="pt-2 border-t border-gray-200 flex justify-between items-center font-bold text-lg text-gray-800">
+            <span>Total:</span>
+            <span id="cart-total" class="text-rose-600">$0.00</span>
+          </div>
+
+          <button onclick="enviarPedidoPorWhatsApp()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl shadow flex items-center justify-center gap-2">
+            <i data-lucide="message-square" class="w-5 h-5"></i>
+            Enviar Pedido por WhatsApp
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pie de pagina -->
+  <footer class="bg-white border-t border-gray-300 mt-auto py-6 text-center text-sm text-gray-500">
+    <p> Todos los derechos reservados © 2026 Ilusiones de color.           Los pagos contra entrega requieren el 50% de anticipo.</p>
+  </footer>
+
+  <!-- 5. LÓGICA Y DATOS (JAVASCRIPT)-->
+  <script>
+    function vaciarCarrito() {
+      if (carrito.length === 0) return;
+      const confirmar = confirm("¿Estás seguro de que deseas vaciar tu carrito?");
+      if (confirmar) {
+        carrito = [];
+        actualizarCarrito();
+      } 
+    }
+
+    /* CONFIGURACIÓN DE WHATSAPP Y HORARIOS DE ENTREGA */
+    const CONFIG = {
+      whatsappNumber: "525587601699",
+      horaMinima: "09:00", 
+      horaMaxima: "20:00"  
+    };
+
+    /* Productos */
+    const productosBD = [
+    /*añadir "detalle" al producto para poner las especificaciones y añadir "requiereFecha: true" para solicitar la fecha y la hora*/  
+
+      { 
+        id: 1, 
+        nombre: "Caja Sorpresa de Chocolates", 
+        precio: 350, 
+        categoria: ["chocolates", "cumpleanos"], 
+        imagen: "imgs/Productos/Arreglos/caja-chocolates.jpg",
+        detalle: "Incluye: 6 chocolates Ferrero Rocher, 4 barras de chocolate artesanal, tarro de gomitas enchiladas y decoración con listón rojo.",
+        requiereFecha: true 
+      },
+      { 
+        id: 2, 
+        nombre: "Ramo de Rosas Rojas (12 pzs)", 
+        precio: 480, 
+        categoria: "flores", 
+        imagen: "imgs/Productos/Arreglos/ramo-rosas.jpg" 
+      },
+      { 
+        id: 3, 
+        nombre: "Oso de Peluche Gigante", 
+        precio: 650, 
+        categoria: "cumpleanos", 
+        imagen: "imgs/Productos/Arreglos/oso-peluche.jpg" 
+      },
+      { 
+        id: 4, 
+        nombre: "Globos de Aniversario", 
+        precio: 290, 
+        categoria: "aniversario", 
+        imagen: "imgs/Productos/Arreglos/globos.jpg",
+        requiereFecha: true 
+      },
+      { 
+        id: 5, 
+        nombre: "Ramo con carritos y chocolates", 
+        precio: 450, 
+        categoria: "aniversario", 
+        imagen: "imgs/Productos/Arreglos/Hot Wheels.jpg",
+        
+      },
+      { 
+        id: 6, 
+        nombre: "Cajitas para padrinos", 
+        precio: 450, 
+        categoria: "aniversario", 
+        imagen: "imgs/Productos/Arreglos/Cajas-padrinos.jpg",
+        
+      }
+    ];
+
+    let carrito = [];
+
+    window.addEventListener('DOMContentLoaded', () => {
+      renderProductos(productosBD);
+      lucide.createIcons();
+
+      window.addEventListener('click', (e) => {
+        if (!e.target.closest('.dropdown-container')) {
+          document.querySelectorAll('.dropdown-menu').forEach(menu => {
+            menu.classList.add('hidden');
+          });
+        }
+      });
+    });
+
+    function toggleDropdown(id, event) {
+      event.stopPropagation();
+      document.querySelectorAll('.dropdown-menu').forEach(menu => {
+        if (menu.id !== `dropdown-${id}`) menu.classList.add('hidden');
+      });
+      const menu = document.getElementById(`dropdown-${id}`);
+      if (menu) {
+        menu.classList.toggle('hidden');
+      }
+    }
+
+    // Función que pinta las tarjetas de productos en pantalla
+    function renderProductos(lista) {
+      const grid = document.getElementById('products-grid');
+      grid.innerHTML = '';
+      if (lista.length === 0) {
+        grid.innerHTML = `<div class="col-span-full text-center py-8 text-gray-500">No hay productos en esta categoría.</div>`;
+        return;
+      }
+
+      // Obtenemos la fecha actual de hoy en formato YYYY-MM-DD para bloquear fechas pasadas
+      const hoy = new Date().toISOString().split('T')[0];
+
+      lista.forEach(prod => {
+        const card = document.createElement('div');
+        card.className = "bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col overflow-visible relative";
+        
+        let seccionDetalleHTML = "";
+        if (prod.detalle) {
+          seccionDetalleHTML = `
+            <div class="relative dropdown-container">
+              <button onclick="toggleDropdown(${prod.id}, event)" class="flex items-center gap-0.5 px-2 py-1 text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-lg transition-colors" title="Ver detalles">
+                <span>Detalles</span>
+                <i data-lucide="more-vertical" class="w-4 h-4"></i>
+              </button>
+              <div id="dropdown-${prod.id}" class="dropdown-menu hidden absolute left-0 bottom-full mb-2 w-72 bg-white rounded-2xl shadow-2xl border border-rose-200 p-4 z-50 text-left">
+                <p class="text-xs font-extrabold text-rose-600 uppercase tracking-wide mb-1.5 border-b border-rose-100 pb-1">Especificaciones:</p>
+                <p class="text-xs text-gray-700 leading-relaxed">${prod.detalle}</p>
+              </div>
+            </div>
+          `;
+        }
+
+        // 👉 Agregamos min="${hoy}" para bloquear fechas pasadas y min/max en la hora
+        let seccionFechaHTML = "";
+        if (prod.requiereFecha) {
+          seccionFechaHTML = `
+            <div class="bg-rose-50/60 p-2.5 rounded-xl border border-rose-100 space-y-2 my-2">
+              <label class="block text-[11px] font-bold text-rose-700 uppercase tracking-wide">Entrega (9:00 AM - 8:00 PM):</label>
+              <div class="grid grid-cols-2 gap-2">
+                <input type="date" id="fecha-${prod.id}" min="${hoy}" class="w-full px-2 py-1.5 text-xs bg-white border border-rose-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-rose-400">
+                <input type="time" id="hora-${prod.id}" min="${CONFIG.horaMinima}" max="${CONFIG.horaMaxima}" class="w-full px-2 py-1.5 text-xs bg-white border border-rose-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-rose-400">
+              </div>
+            </div>
+          `;
+        }
+
+        card.innerHTML = `
+          <div class="h-60 overflow-hidden rounded-t-2xl"><img src="${prod.imagen}" class="w-full h-full object-cover" onerror="this.src='https://via.placeholder.com/400x300?text=Imagen+No+Encontrada'"></div>
+          <div class="p-4 flex-1 flex flex-col justify-between space-y-3">
+            <div>
+              <h3 class="font-bold text-gray-800 text-sm">${prod.nombre}</h3>
+              <div class="flex items-center justify-between mt-1">
+                <p class="text-rose-600 font-extrabold text-lg">$${prod.precio.toFixed(2)}</p>
+                ${seccionDetalleHTML}
+              </div>
+            </div>
+
+            ${seccionFechaHTML}
+
+            <button onclick="agregarAlCarrito(${prod.id})" class="w-full bg-rose-500 hover:bg-rose-600 text-white font-medium py-2 rounded-xl text-sm flex items-center justify-center gap-1">
+              <i data-lucide="plus" class="w-4 h-4"></i> Agregar al carrito
+            </button>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+      lucide.createIcons();
+    }
+
+    function agregarAlCarrito(id) {
+      const producto = productosBD.find(p => p.id === id);
+      
+      let fechaSeleccionada = "";
+      let horaSeleccionada = "";
+
+      if (producto.requiereFecha) {
+        const inputFecha = document.getElementById(`fecha-${id}`).value;
+        const inputHora = document.getElementById(`hora-${id}`).value;
+
+        if (!inputFecha || !inputHora) {
+          alert("Por favor selecciona la fecha y hora de entrega.");
+          return;
+        }
+
+        // 👉 Validación adicional por código de las restricciones de horario
+        if (inputHora < CONFIG.horaMinima || inputHora > CONFIG.horaMaxima) {
+          alert(`Las entregas solo están disponibles en horario de ${CONFIG.horaMinima} hrs a ${CONFIG.horaMaxima} hrs.`);
+          return;
+        }
+
+        fechaSeleccionada = inputFecha;
+        horaSeleccionada = inputHora;
+      }
+
+      const existe = carrito.find(item => item.id === id && item.fecha === fechaSeleccionada && item.hora === horaSeleccionada);
+      
+      if (existe) { 
+        existe.cantidad++; 
+      } else { 
+        carrito.push({ 
+          ...producto, 
+          cantidad: 1, 
+          fecha: fechaSeleccionada, 
+          hora: horaSeleccionada 
+        }); 
+      }
+      actualizarCarrito();
+      toggleCarrito();
+    }
+
+    function cambiarCantidad(index, cambio) {
+      carrito[index].cantidad += cambio;
+      if (carrito[index].cantidad <= 0) { 
+        carrito.splice(index, 1);
+      }
+      actualizarCarrito();
+    }
+
+    function actualizarCarrito() {
+      const itemsContainer = document.getElementById('cart-items');
+      const badge = document.getElementById('cart-badge');
+      const totalEl = document.getElementById('cart-total');
+      const checkoutSec = document.getElementById('checkout-section');
+      itemsContainer.innerHTML = '';
+      let total = 0, totalItems = 0;
+
+      if (carrito.length === 0) {
+        itemsContainer.innerHTML = `<p class="text-center text-gray-400 py-8">Tu carrito está vacío.</p>`;
+        badge.classList.add('hidden');
+        checkoutSec.classList.add('hidden');
+        totalEl.innerText = '$0.00';
+        return;
+      }
+
+      checkoutSec.classList.remove('hidden');
+      carrito.forEach((item, index) => {
+        const subtotal = item.precio * item.cantidad;
+        total += subtotal;
+        totalItems += item.cantidad;
+        
+        let infoFechaHtml = "";
+        if (item.fecha && item.hora) {
+          infoFechaHtml = `<p class="text-[11px] text-rose-600 font-medium">📅 Entrega: ${item.fecha} a las ${item.hora}</p>`;
+        }
+
+        const el = document.createElement('div');
+        el.className = "flex items-center gap-3 bg-gray-50 p-3 rounded-xl border border-gray-100";
+        el.innerHTML = `
+          <img src="${item.imagen}" class="w-12 h-12 rounded-lg object-cover">
+          <div class="flex-1">
+            <h4 class="text-xs font-bold text-gray-800">${item.nombre}</h4>
+            ${infoFechaHtml}
+            <p class="text-xs text-gray-500">$${item.precio} x ${item.cantidad} = <strong>$${subtotal}</strong></p>
+          </div>
+          <div class="flex items-center gap-1">
+            <button onclick="cambiarCalendar?.() || cambiarCantidad(${index}, -1)" class="w-6 h-6 bg-white border border-gray-200 rounded text-xs font-bold text-gray-600">-</button>
+            <span class="text-xs font-bold px-1">${item.cantidad}</span>
+            <button onclick="cambiarCantidad(${index}, 1)" class="w-6 h-6 bg-white border border-gray-200 rounded text-xs font-bold text-gray-600">+</button>
+          </div>
+        `;
+        itemsContainer.appendChild(el);
+      });
+
+      badge.innerText = totalItems;
+      badge.classList.remove('hidden');
+      totalEl.innerText = `$${total.toFixed(2)}`;
+    }
+
+    function toggleCarrito() {
+      document.getElementById('cart-drawer').classList.toggle('hidden');
+    }
+
+    function filtrarCategoria(cat) {
+      if (cat === 'todas') {
+        renderProductos(productosBD);
+      } else {
+        const filtrados = productosBD.filter(p => 
+          Array.isArray(p.categoria) ? p.categoria.includes(cat) : p.categoria === cat
+        );
+        renderProductos(filtrados);
+      }
+    }
+
+    function filtrarProductos() {
+      const texto = document.getElementById('search-input').value.toLowerCase();
+      renderProductos(productosBD.filter(p => p.nombre.toLowerCase().includes(texto)));
+    }
+
+    function enviarPedidoPorWhatsApp() {
+      const nombre = document.getElementById('cliente-nombre').value.trim();
+      const direccion = document.getElementById('cliente-direccion').value.trim();
+      const dedicatoria = document.getElementById('cliente-dedicatoria').value.trim();
+      const metodoPago = document.getElementById('cliente-pago').value;
+
+      if (!nombre || !direccion) {
+        alert("Por favor completa tu Nombre y Dirección de entrega.");
+        return;
+      }
+
+      let mensaje = `NUEVO PEDIDO\n\n`;
+      mensaje += `Cliente: ${nombre}\n`;
+      mensaje += `Dirección: ${direccion}\n`;
+      mensaje += `Método de pago: ${metodoPago}\n`;
+      if (dedicatoria) mensaje += `Tarjeta de regalo (dedicatoria): "${dedicatoria}"\n`;
+      mensaje += `\n----------------------------------\nPRODUCTOS:\n`;
+
+      let total = 0;
+      carrito.forEach((item, i) => {
+        const subtotal = item.precio * item.cantidad;
+        total += subtotal;
+        mensaje += `${i + 1}. ${item.nombre} (x${item.cantidad}) - $${subtotal}\n`;
+        if (item.fecha && item.hora) {
+          mensaje += `   └ 📅 Fecha/Hora: ${item.fecha} a las ${item.hora}\n`;
+        }
+      });
+
+      mensaje += `----------------------------------\nTOTAL: $${total.toFixed(2)}\n\n`;
+      mensaje += `Quedo a la espera de sus datos de pago o confirmación.`;
+
+      window.open(`https://wa.me/${CONFIG.whatsappNumber}?text=${encodeURIComponent(mensaje)}`, '_blank');
+      carrito = [];
+      actualizarCarrito();
+      toggleCarrito();
+    }
+  </script>
+</body>
+</html>
